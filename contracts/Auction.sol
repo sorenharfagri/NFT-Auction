@@ -6,10 +6,9 @@ import "./Token/IERC721.sol";
 import "./Utils/Ownable.sol";
 
 contract Auction is Ownable, IERC721Receiver {
+
     uint256 public lotCreationFee;
-
     uint256 public auctionMinimumDuration = 3600;
-
     uint256 public auctionMaximumDuration = 86400;
 
     mapping(address => mapping(uint256 => Lot)) public lots;
