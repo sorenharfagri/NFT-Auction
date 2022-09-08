@@ -102,7 +102,9 @@ describe("Auction", () => {
         await transferNftTo(tokenToSellId, sellerAcc.address)
         await approveAllTokensToAuction(sellerAcc)
 
-        const listNftTx = await auction.connect(sellerAcc).createLot(token.address, tokenToSellId, duration)
+        const txValue = await auction.lotCreationFee()
+
+        const listNftTx = await auction.connect(sellerAcc).createLot(token.address, tokenToSellId, duration, { value: txValue })
         await listNftTx.wait()
     })
 
@@ -115,7 +117,9 @@ describe("Auction", () => {
         await transferNftTo(tokenToSellId, sellerAcc.address)
         await approveTokenToAuction(sellerAcc, tokenToSellId)
 
-        const listNftTx = await auction.connect(sellerAcc).createLot(token.address, tokenToSellId, duration)
+        const txValue = await auction.lotCreationFee()
+
+        const listNftTx = await auction.connect(sellerAcc).createLot(token.address, tokenToSellId, duration, { value: txValue })
         await listNftTx.wait()
     })
 
@@ -290,7 +294,10 @@ describe("Auction", () => {
         const nftIdToSell = nftTokenId_1
         const betAmount = 1000
 
-        const duration = await createDefaultLot(lotCreator, nftTokenId_1)
+        const {
+            duration,
+            payedFee
+        } = await createDefaultLot(lotCreator, nftTokenId_1)
 
         const betTx = await auction.connect(buyer).bet(token.address, nftIdToSell, { value: betAmount })
         await betTx.wait()
@@ -322,7 +329,10 @@ describe("Auction", () => {
         const lotCreator = acc3
         const nftIdToSell = nftTokenId_1
 
-        const duration = await createDefaultLot(lotCreator, nftTokenId_1)
+        const {
+            duration,
+            payedFee
+        } = await createDefaultLot(lotCreator, nftTokenId_1)
 
         const lotBeforeClosing = await auction.getLot(token.address, nftIdToSell)
 
@@ -375,7 +385,10 @@ describe("Auction", () => {
         const lotCreator = acc3
         const nftIdToSell = nftTokenId_1
 
-        const duration = await createDefaultLot(lotCreator, nftIdToSell)
+        const {
+            duration,
+            payedFee
+        } = await createDefaultLot(lotCreator, nftIdToSell)
         const durSumm = duration.toNumber() + 10000
 
         await ethers.provider.send('evm_increaseTime', [durSumm]);
@@ -403,11 +416,16 @@ describe("Auction", () => {
         await transferNftTo(nftId, creator.address)
         await approveAllTokensToAuction(creator)
 
-        const createLotTx = await auction.connect(creator).createLot(token.address, nftId, duration)
+        const txValue = await auction.lotCreationFee()
+
+        const createLotTx = await auction.connect(creator).createLot(token.address, nftId, duration, { value: txValue })
 
         await createLotTx.wait()
 
-        return duration
+        return {
+            duration,
+            payedFee: txValue
+        }
     }
 
     async function transferNftTo(nftId: number, to: string) {

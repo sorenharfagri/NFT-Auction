@@ -7,7 +7,7 @@ import "./Utils/Ownable.sol";
 
 contract Auction is Ownable, IERC721Receiver {
 
-    uint256 public lotCreationFee;
+    uint256 public lotCreationFee = 1000000000000000;
     uint256 public auctionMinimumDuration = 3600;
     uint256 public auctionMaximumDuration = 86400;
 
@@ -162,15 +162,6 @@ contract Auction is Ownable, IERC721Receiver {
     {
         return lots[tokenContract][tokenId].endTimestamp != 0;
     }
-
-    // block 1100
-    // endTime 1500
-    
-    // block 1600
-    // endTime 1700
-
-    // endtime 1600
-    // block 1900
 
     function _lotStillOngoing(Lot memory lot) internal view returns (bool) {
         return block.timestamp <= lot.endTimestamp;
