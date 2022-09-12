@@ -7,7 +7,6 @@ import "./Utils/Ownable.sol";
 import "./Utils/ReentrancyGuard.sol";
 
 contract Auction is Ownable, IERC721Receiver, ReentrancyGuard {
-
     uint256 public lotCreationFee = 1000000000000000;
     uint256 public auctionMinimumDuration = 3600;
     uint256 public auctionMaximumDuration = 86400;
@@ -73,7 +72,11 @@ contract Auction is Ownable, IERC721Receiver, ReentrancyGuard {
         emit NewLot(tokenContract, tokenId, lots[tokenContract][tokenId]);
     }
 
-    function bet(address tokenContract, uint256 tokenId) public payable nonReentrant {
+    function bet(address tokenContract, uint256 tokenId)
+        public
+        payable
+        nonReentrant
+    {
         require(_lotExists(tokenContract, tokenId), "Lot doesnt exists");
 
         Lot memory lot = lots[tokenContract][tokenId];
@@ -91,7 +94,7 @@ contract Auction is Ownable, IERC721Receiver, ReentrancyGuard {
         lots[tokenContract][tokenId].currentBettor = msg.sender;
         lots[tokenContract][tokenId].currentBet = msg.value;
 
-        lastBettor.transfer(lot.currentBet);
+        lastBettor.call{value: lot.currentBet}("");
 
         emit NewBet(tokenContract, tokenId, lots[tokenContract][tokenId]);
     }
@@ -111,20 +114,24 @@ contract Auction is Ownable, IERC721Receiver, ReentrancyGuard {
             // tranfser eth back to seller
             // and nft to auction winner
 
-            lotOwnerAddress.transfer(lot.currentBet);
+            lotOwnerAddress.call{value: lot.currentBet}("");
 
-            IERC721(tokenContract).safeTransferFrom(
-                address(this),
-                lot.currentBettor,
-                tokenId
-            );
+            try
+                IERC721(tokenContract).safeTransferFrom(
+                    address(this),
+                    lot.currentBettor,
+                    tokenId
+                )
+            {} catch {}
         } else {
             // transfer nft back to owner If there was no bets
-            IERC721(tokenContract).safeTransferFrom(
-                address(this),
-                lot.owner,
-                tokenId
-            );
+            try
+                IERC721(tokenContract).safeTransferFrom(
+                    address(this),
+                    lot.owner,
+                    tokenId
+                )
+            {} catch {}
         }
 
         emit LotClosed(tokenContract, tokenId, lot);
