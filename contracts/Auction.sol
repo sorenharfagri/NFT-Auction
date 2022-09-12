@@ -4,8 +4,9 @@ pragma solidity ^0.8.9;
 import "./Token/IERC721Receiver.sol";
 import "./Token/IERC721.sol";
 import "./Utils/Ownable.sol";
+import "./Utils/ReentrancyGuard.sol";
 
-contract Auction is Ownable, IERC721Receiver {
+contract Auction is Ownable, IERC721Receiver, ReentrancyGuard {
 
     uint256 public lotCreationFee = 1000000000000000;
     uint256 public auctionMinimumDuration = 3600;
@@ -72,7 +73,7 @@ contract Auction is Ownable, IERC721Receiver {
         emit NewLot(tokenContract, tokenId, lots[tokenContract][tokenId]);
     }
 
-    function bet(address tokenContract, uint256 tokenId) public payable {
+    function bet(address tokenContract, uint256 tokenId) public payable nonReentrant {
         require(_lotExists(tokenContract, tokenId), "Lot doesnt exists");
 
         Lot memory lot = lots[tokenContract][tokenId];
